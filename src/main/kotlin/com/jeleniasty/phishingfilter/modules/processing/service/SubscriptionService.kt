@@ -1,8 +1,8 @@
 package com.jeleniasty.phishingfilter.modules.processing.service
 
 import com.jeleniasty.phishingfilter.modules.processing.model.SubscriptionActionType
-import com.jeleniasty.phishingfilter.modules.processing.persistence.SubscriptionRepository
-import com.jeleniasty.phishingfilter.modules.processing.persistence.entity.Subscription
+import com.jeleniasty.phishingfilter.modules.processing.persistence.sql.SubscriptionRepository
+import com.jeleniasty.phishingfilter.modules.processing.persistence.sql.entity.Subscription
 import com.jeleniasty.phishingfilter.shared.utils.logger
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

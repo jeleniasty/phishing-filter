@@ -1,4 +1,4 @@
-package com.jeleniasty.phishingfilter.modules.processing.persistence.entity
+package com.jeleniasty.phishingfilter.modules.processing.persistence.sql.entity
 
 import jakarta.persistence.*
 import java.time.LocalDateTime
