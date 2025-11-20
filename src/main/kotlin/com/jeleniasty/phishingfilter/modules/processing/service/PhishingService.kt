@@ -64,12 +64,20 @@ class PhishingService(
         }
 
 
-        urlValidationService.findFindRiskyUrl(urls)?.let { riskyUrl ->
-            logger.info("One of urls [{}] evaluated as malicious. Returning PHISHING", urls)
-            phishingCacheService.saveKey(riskyUrl)
-            phishingCacheService.saveKey(dto.sender)
-            updateMessageStatus(key, Status.PHISHING)
-            return
+        urlValidationService.findRiskyUrl(urls).subscribe { result ->
+            when {
+                result.serviceError -> {
+                    logger.warn("Could not evaluate URLs {}, marking as PENDING", urls)
+                    updateMessageStatus(key, Status.PENDING)
+                }
+
+                result.riskyUrl != null -> {
+                    logger.info("One of urls {} evaluated as malicious. Returning PHISHING", urls)
+                    phishingCacheService.saveKey(result.riskyUrl)
+                    phishingCacheService.saveKey(dto.sender)
+                    updateMessageStatus(key, Status.PHISHING)
+                }
+            }
         }
 
         updateMessageStatus(key, Status.SAFE)

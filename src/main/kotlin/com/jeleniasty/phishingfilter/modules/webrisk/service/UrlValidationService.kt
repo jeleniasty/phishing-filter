@@ -1,8 +1,11 @@
 package com.jeleniasty.phishingfilter.modules.webrisk.service
 
 import com.jeleniasty.phishingfilter.modules.webrisk.model.ConfidenceLevel
+import com.jeleniasty.phishingfilter.modules.webrisk.model.UrlCheckResult
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @Service
 class UrlValidationService(
@@ -12,16 +15,24 @@ class UrlValidationService(
 
     private val confidenceThreshold = ConfidenceLevel.valueOf(confidenceThresholdStr)
 
-    fun findFindRiskyUrl(urls: List<String>): String? {
-        for (url in urls) {
-            val response = webRiskClient.checkUri(url).block() ?: continue
-
-            if (response.scores.any { it.confidenceLevel.isHigherThan(confidenceThreshold) }) {
-                return url
+    fun findRiskyUrl(urls: List<String>): Mono<UrlCheckResult> {
+        return Flux.fromIterable(urls)
+            .concatMap { url ->
+                webRiskClient.checkUri(url)
+                    .map { response ->
+                        UrlCheckResult(
+                            riskyUrl = if (response.scores.any { it.confidenceLevel.isHigherThan(confidenceThreshold) }) url else null
+                        )
+                    }
+                    .onErrorResume {
+                        Mono.just(UrlCheckResult(serviceError = true))
+                    }
             }
-        }
-        return null
+            .filter { it.riskyUrl != null || it.serviceError }
+            .next()
+            .defaultIfEmpty(UrlCheckResult())
     }
+
 
     fun ConfidenceLevel.isHigherThan(other: ConfidenceLevel): Boolean {
         return this.ordinal > other.ordinal
