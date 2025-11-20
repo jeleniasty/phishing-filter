@@ -6,7 +6,6 @@ import com.jeleniasty.phishingfilter.modules.webrisk.service.UrlExtractorService
 import com.jeleniasty.phishingfilter.shared.utils.MessageService
 import com.jeleniasty.phishingfilter.shared.utils.Status
 import com.jeleniasty.phishingfilter.shared.utils.logger
-import org.apache.kafka.clients.admin.NewTopic
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.KafkaHeaders
 import org.springframework.messaging.handler.annotation.Header
@@ -18,11 +17,10 @@ class PhishingService(
     private val subscriptionService: SubscriptionService,
     private val urlValidationService: UrlValidationService,
     private val messageService: MessageService,
-    private val phishingTopic: NewTopic
 ) {
-    private val logger = logger();
+    private val logger = logger()
 
-    @KafkaListener(topics = ["phishing-message"])
+    @KafkaListener(topics = ["\${kafka.topic.phishing-message-log.name}"])
     fun logAllMessages(msg: String) {
         logger.info("Got message: $msg")
     }
@@ -37,19 +35,25 @@ class PhishingService(
     ) {
         logger.info("Received message [messageId:{}]. Processing...", dto.recipient)
 
-        if (subscriptionService.processSubscription(dto.sender, dto.message)) return
+        if (subscriptionService.processSubscription(dto.sender, dto.message)) {
+            updateMessageStatus(key, Status.SKIPPED)
+            return
+        }
 
         if (!subscriptionService.isSubscribed(dto.recipient)) {
-            logger.info("Recipient {} is not subscribed, skipping processing", dto.recipient)
+            logger.info("Recipient {} is not subscribed. Skipping processing", dto.recipient)
+            updateMessageStatus(key, Status.SKIPPED)
             return
         }
 
         val urls = UrlExtractorService.extractValidUrls(dto.message)
         if (urls.isEmpty()) {
-            logger.info("No url found in message. Skipping processing")
+            updateMessageStatus(key, Status.SAFE)
+            logger.info("No url found in message. Message is SAFE")
             return
         }
 
+        logger.info("Found urls: {}", urls)
         //TODO cache
         //check if sender is already blocked
         //check if url is already blocked

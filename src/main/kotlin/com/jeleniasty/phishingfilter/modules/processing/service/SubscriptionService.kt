@@ -17,7 +17,7 @@ class SubscriptionService(private val subscriptionRepository: SubscriptionReposi
         return when (SubscriptionActionType.fromMessage(message)) {
             SubscriptionActionType.START -> {
                 subscribe(sender)
-                false
+                true
             }
 
             SubscriptionActionType.STOP -> {

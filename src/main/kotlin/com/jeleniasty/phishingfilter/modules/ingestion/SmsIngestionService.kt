@@ -19,26 +19,11 @@ class SmsIngestionService(
     private val logger = logger()
 
     fun ingestMessage(dto: MessageInDto): MessageOutDto {
-        val messageId = messageService.saveMessage(dto.sender, dto.recipient, dto.message)
+        val messageId = messageService.saveMessage(dto.sender, dto. recipient, dto.message)
         logger.info("Message [messageId: {}] saved", messageId)
 
-        // ✅ FIX: Add callback to handle success/failure
-        val sendResult = kafkaTemplate.send(phishingTopic, messageId, dto)
-
-        sendResult.whenComplete { result, ex ->
-            if (ex != null) {
-                // ❌ Handle error
-                logger.error("Failed to send message [messageId: {}] to Kafka topic: {}",
-                    messageId, ex.message, ex)
-                // TODO: Update message status to FAILED if needed
-            } else {
-                // ✅ Success
-                logger.info("Message [messageId: {}] pushed to {} topic successfully. Partition: {}, Offset: {}",
-                    messageId, phishingTopic,
-                    result?.recordMetadata?.partition(),
-                    result?.recordMetadata?.offset())
-            }
-        }
+        kafkaTemplate.send(phishingTopic, messageId, dto)
+        logger.info("Message [messageId: {}] pushed to {} topic", messageId, phishingTopic)
 
         return MessageOutDto(messageId, Status.PROCESSING)
     }
