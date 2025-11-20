@@ -16,6 +16,12 @@ spring:
     consumer:
       group-id: phishing-group
       auto-offset-reset: earliest
+  cassandra:
+    keyspace-name: phishing_cache
+    contact-points: localhost
+    port: 9042
+    local-datacenter: datacenter1
+    schema-action: CREATE_IF_NOT_EXISTS
 
 kafka:
   topic:
@@ -23,6 +29,10 @@ kafka:
       name: "phishing-message"
       partitions: 3
       replication-factor: 1
+
+cassandra:
+  phishing-cache:
+    ttl-days: 30
 
 google:
   api-key: 1234

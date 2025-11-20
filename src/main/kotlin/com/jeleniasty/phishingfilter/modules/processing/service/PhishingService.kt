@@ -17,13 +17,9 @@ class PhishingService(
     private val subscriptionService: SubscriptionService,
     private val urlValidationService: UrlValidationService,
     private val messageService: MessageService,
+    private val phishingCacheService: PhishingCacheService
 ) {
     private val logger = logger()
-
-    @KafkaListener(topics = ["\${kafka.topic.phishing-message-log.name}"])
-    fun logAllMessages(msg: String) {
-        logger.info("Got message: $msg")
-    }
 
     @KafkaListener(
         topics = ["\${kafka.topic.phishing-message-log.name}"],
@@ -46,6 +42,12 @@ class PhishingService(
             return
         }
 
+        if (phishingCacheService.exists(dto.sender)) {
+            logger.info("Sender {} is on the blacklist. Returning PHISHING", dto.sender)
+            updateMessageStatus(key, Status.PHISHING)
+            return
+        }
+
         val urls = UrlExtractorService.extractValidUrls(dto.message)
         if (urls.isEmpty()) {
             updateMessageStatus(key, Status.SAFE)
@@ -54,15 +56,25 @@ class PhishingService(
         }
 
         logger.info("Found urls: {}", urls)
-        //TODO cache
-        //check if sender is already blocked
-        //check if url is already blocked
 
-//        urlValidationService.evaluateUrls(urls)
+        if (phishingCacheService.anyExists(urls)) {
+            logger.info("One of urls [{}] is on the blacklist. Returning PHISHING", urls)
+            updateMessageStatus(key, Status.PHISHING)
+            return
+        }
+
+
+        urlValidationService.findFindRiskyUrl(urls)?.let { riskyUrl ->
+            logger.info("One of urls [{}] evaluated as malicious. Returning PHISHING", urls)
+            phishingCacheService.saveKey(riskyUrl)
+            phishingCacheService.saveKey(dto.sender)
+            updateMessageStatus(key, Status.PHISHING)
+            return
+        }
 
         updateMessageStatus(key, Status.SAFE)
-            logger.info("Message [messageId: {}] processed", key)
-        }
+        logger.info("Message [messageId: {}] processed", key)
+    }
 
 
     private fun updateMessageStatus(messageId: UUID, newStatus: Status) =

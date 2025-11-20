@@ -12,15 +12,15 @@ class UrlValidationService(
 
     private val confidenceThreshold = ConfidenceLevel.valueOf(confidenceThresholdStr)
 
-    fun evaluateUrls(urls: List<String>): Boolean {
+    fun findFindRiskyUrl(urls: List<String>): String? {
         for (url in urls) {
             val response = webRiskClient.checkUri(url).block() ?: continue
 
             if (response.scores.any { it.confidenceLevel.isHigherThan(confidenceThreshold) }) {
-                return false
+                return url
             }
         }
-        return true
+        return null
     }
 
     fun ConfidenceLevel.isHigherThan(other: ConfidenceLevel): Boolean {
