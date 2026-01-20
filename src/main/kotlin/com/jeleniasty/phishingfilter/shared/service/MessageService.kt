@@ -1,6 +1,5 @@
 package com.jeleniasty.phishingfilter.shared.service
 
-import com.jeleniasty.phishingfilter.modules.processing.model.MessageInDto
 import com.jeleniasty.phishingfilter.shared.model.OutboxStatus
 import com.jeleniasty.phishingfilter.shared.persistence.message.Message
 import com.jeleniasty.phishingfilter.shared.persistence.message.MessageRepository
