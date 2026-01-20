@@ -1,6 +1,6 @@
 package com.jeleniasty.phishingfilter.modules.processing.model
 
-import com.jeleniasty.phishingfilter.shared.utils.Status
+import com.jeleniasty.phishingfilter.shared.model.PhishingStatus
 import java.util.*
 
-data class MessageOutDto(val messageId: UUID, val messageStatus: Status)
+data class MessageOutDto(val messageId: UUID, val messageStatus: PhishingStatus)

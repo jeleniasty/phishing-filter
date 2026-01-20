@@ -1,9 +1,9 @@
-package com.jeleniasty.phishingfilter.shared.utils
+package com.jeleniasty.phishingfilter.shared.persistence.message
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-interface MessageLogRepository : JpaRepository<MessageLog, UUID> {
+interface MessageRepository : JpaRepository<Message, UUID> {
 }

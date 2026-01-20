@@ -1,5 +1,6 @@
 package com.jeleniasty.phishingfilter.config
 
+import com.jeleniasty.phishingfilter.modules.delivery.PhishingEvent
 import com.jeleniasty.phishingfilter.modules.processing.model.MessageInDto
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -27,7 +28,7 @@ class KafkaConfig(
 ) {
 
     @Bean
-    fun producerFactory(): ProducerFactory<UUID, MessageInDto> {
+    fun producerFactory(): ProducerFactory<UUID, PhishingEvent> {
         val props = mapOf(
             ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
             ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to org.apache.kafka.common.serialization.UUIDSerializer::class.java,
@@ -37,11 +38,11 @@ class KafkaConfig(
     }
 
     @Bean
-    fun kafkaTemplate(): KafkaTemplate<UUID, MessageInDto> = KafkaTemplate(producerFactory())
+    fun kafkaTemplate(): KafkaTemplate<UUID, PhishingEvent> = KafkaTemplate(producerFactory())
 
     @Bean
-    fun consumerFactory(): ConsumerFactory<UUID, MessageInDto> {
-        val valueDeserializer = JsonDeserializer(MessageInDto::class.java).apply {
+    fun consumerFactory(): ConsumerFactory<UUID, PhishingEvent> {
+        val valueDeserializer = JsonDeserializer(PhishingEvent::class.java).apply {
             setRemoveTypeHeaders(false)
             addTrustedPackages("*")
         }
@@ -57,8 +58,8 @@ class KafkaConfig(
     }
 
     @Bean
-    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<UUID, MessageInDto> {
-        val factory = ConcurrentKafkaListenerContainerFactory<UUID, MessageInDto>()
+    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<UUID, PhishingEvent> {
+        val factory = ConcurrentKafkaListenerContainerFactory<UUID, PhishingEvent>()
         factory.consumerFactory = consumerFactory()
         factory.setConcurrency(phishingTopicPartitions)
         return factory
