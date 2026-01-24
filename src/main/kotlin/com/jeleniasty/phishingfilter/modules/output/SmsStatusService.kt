@@ -1,8 +1,9 @@
 package com.jeleniasty.phishingfilter.modules.output
 
 import com.jeleniasty.phishingfilter.modules.processing.model.MessageOutDto
-import com.jeleniasty.phishingfilter.shared.utils.MessageService
-import com.jeleniasty.phishingfilter.shared.utils.Status
+import com.jeleniasty.phishingfilter.shared.service.MessageService
+import com.jeleniasty.phishingfilter.shared.model.PhishingStatus
+import com.jeleniasty.phishingfilter.shared.utils.logger
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -10,10 +11,10 @@ import java.util.*
 class SmsStatusService(private val messageService: MessageService) {
 
     fun getSmsStatus(messageId: UUID): MessageOutDto {
-        val status = messageService.getMessageStatus(messageId)
-            .map { it.status }
-            .orElse(Status.UNKNOWN)
-        return MessageOutDto(messageId, status)
+        val phishingStatus = messageService.getMessage(messageId)?.status ?: PhishingStatus.UNKNOWN.also {
+            logger().info("Message not found for ID: {}", messageId)
+        }
+        return MessageOutDto(messageId, phishingStatus)
     }
 
 }

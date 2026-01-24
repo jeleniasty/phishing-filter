@@ -1,4 +1,4 @@
-# Phishing Filter Docker Compose Setup
+# Phishing Filter
 
 This project runs an integrated environment including PostgreSQL, Kafka (in KRaft mode), Cassandra, and the Phishing Filter Spring Boot application using Docker Compose.
 

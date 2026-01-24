@@ -1,34 +1,23 @@
 package com.jeleniasty.phishingfilter.modules.processing.persistence.sql.entity
 
+import com.jeleniasty.phishingfilter.shared.persistence.Auditable
 import jakarta.persistence.*
-import java.time.LocalDateTime
 
 @Entity
 @Table(
     name = "subscription",
     uniqueConstraints = [UniqueConstraint(name = "uk_subscriber", columnNames = ["subscriber"])]
 )
-class Subscription(
+open class Subscription(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    open var id: Long? = null,
 
     @Column(name = "subscriber", nullable = false)
-    val subscriber: String,
+    open var subscriber: String,
 
     @Column(nullable = false)
-    var enabled: Boolean = true,
-
-    @Column(name = "created_at", nullable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now(),
-
-    @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now()
-) {
+    open var enabled: Boolean = true
+) : Auditable() {
     constructor() : this(0, "")
-
-    @PreUpdate
-    fun preUpdate() {
-        updatedAt = LocalDateTime.now()
-    }
 }

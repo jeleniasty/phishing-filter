@@ -7,6 +7,6 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <include file="db/changelog/v1/001-create-subscription-table.xml"/>
-    <include file="/db/changelog/v1/002-create-message-log-table.xml"/>
-    <include file="/db/changelog/v1/003-create-message-log-creation-and-cleanup-cron.xml" context="prod"/>
+    <include file="/db/changelog/v1/002-create-message-table.xml"/>
+    <include file="/db/changelog/v1/003-create-outbox-table.xml"/>
 </databaseChangeLog>

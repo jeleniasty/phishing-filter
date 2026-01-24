@@ -1,10 +1,11 @@
 package com.jeleniasty.phishingfilter.modules.processing.service
 
+import com.jeleniasty.phishingfilter.modules.delivery.PhishingEvent
 import com.jeleniasty.phishingfilter.modules.webrisk.service.UrlValidationService
-import com.jeleniasty.phishingfilter.modules.processing.model.MessageInDto
 import com.jeleniasty.phishingfilter.modules.webrisk.service.UrlExtractorService
-import com.jeleniasty.phishingfilter.shared.utils.MessageService
-import com.jeleniasty.phishingfilter.shared.utils.Status
+import com.jeleniasty.phishingfilter.shared.service.MessageService
+import com.jeleniasty.phishingfilter.shared.model.PhishingStatus
+import com.jeleniasty.phishingfilter.shared.persistence.message.Message
 import com.jeleniasty.phishingfilter.shared.utils.logger
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.KafkaHeaders
@@ -27,30 +28,30 @@ class PhishingService(
     )
     fun check(
         @Header(KafkaHeaders.RECEIVED_KEY) key: UUID,
-        dto: MessageInDto
+        dto: PhishingEvent
     ) {
-        logger.info("Received message [messageId:{}]. Processing...", dto.recipient)
+        logger.info("Received message [messageId:{}]. Processing...", dto.messageId)
 
-        if (subscriptionService.processSubscription(dto.sender, dto.message)) {
-            updateMessageStatus(key, Status.SKIPPED)
+        if (subscriptionService.processSubscription(dto.sender, dto.content)) {
+            updateMessageStatus(key, PhishingStatus.SKIPPED)
             return
         }
 
         if (!subscriptionService.isSubscribed(dto.recipient)) {
             logger.info("Recipient {} is not subscribed. Skipping processing", dto.recipient)
-            updateMessageStatus(key, Status.SKIPPED)
+            updateMessageStatus(key, PhishingStatus.SKIPPED)
             return
         }
 
         if (phishingCacheService.exists(dto.sender)) {
             logger.info("Sender {} is on the blacklist. Returning PHISHING", dto.sender)
-            updateMessageStatus(key, Status.PHISHING)
+            updateMessageStatus(key, PhishingStatus.PHISHING)
             return
         }
 
-        val urls = UrlExtractorService.extractValidUrls(dto.message)
+        val urls = UrlExtractorService.extractValidUrls(dto.content)
         if (urls.isEmpty()) {
-            updateMessageStatus(key, Status.SAFE)
+            updateMessageStatus(key, PhishingStatus.SAFE)
             logger.info("No url found in message. Message is SAFE")
             return
         }
@@ -59,7 +60,7 @@ class PhishingService(
 
         if (phishingCacheService.anyExists(urls)) {
             logger.info("One of urls [{}] is on the blacklist. Returning PHISHING", urls)
-            updateMessageStatus(key, Status.PHISHING)
+            updateMessageStatus(key, PhishingStatus.PHISHING)
             return
         }
 
@@ -68,26 +69,28 @@ class PhishingService(
             when {
                 result.serviceError -> {
                     logger.warn("Could not evaluate URLs {}, marking as PENDING", urls)
-                    updateMessageStatus(key, Status.PENDING)
+                    updateMessageStatus(key, PhishingStatus.PENDING)
                 }
 
                 result.riskyUrl != null -> {
                     logger.info("One of urls {} evaluated as malicious. Returning PHISHING", urls)
                     phishingCacheService.saveKey(result.riskyUrl)
                     phishingCacheService.saveKey(dto.sender)
-                    updateMessageStatus(key, Status.PHISHING)
+                    updateMessageStatus(key, PhishingStatus.PHISHING)
                 }
             }
         }
 
-        updateMessageStatus(key, Status.SAFE)
+        updateMessageStatus(key, PhishingStatus.SAFE)
         logger.info("Message [messageId: {}] processed", key)
     }
 
 
-    private fun updateMessageStatus(messageId: UUID, newStatus: Status) =
-        messageService.getMessageStatus(messageId)
-            .orElseThrow { IllegalArgumentException("Message [messageId: $messageId] not found") }
-            .apply { status = newStatus }
-            .let { messageService.saveStatus((it)) }
+    private fun updateMessageStatus(messageId: UUID, newPhishingStatus: PhishingStatus): Message {
+        val message = messageService.getMessage(messageId)
+            ?: throw IllegalArgumentException("Message [messageId: $messageId] not found")
+
+        message.status = newPhishingStatus
+        return messageService.saveMessage(message)
+    }
 }
