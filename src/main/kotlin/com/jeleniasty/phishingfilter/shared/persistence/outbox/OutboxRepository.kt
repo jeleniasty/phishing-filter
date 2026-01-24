@@ -11,7 +11,7 @@ interface OutboxRepository : JpaRepository<Outbox, Long> {
         value = """
         SELECT * FROM outbox 
         WHERE status = :status 
-        ORDER BY created_at ASC 
+        ORDER BY created_at 
         LIMIT :limit 
         FOR UPDATE SKIP LOCKED
     """, nativeQuery = true
