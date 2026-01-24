@@ -1,0 +1,96 @@
+package com.jeleniasty.phishingfilter.modules.processing.service
+
+import com.jeleniasty.phishingfilter.modules.delivery.PhishingEvent
+import com.jeleniasty.phishingfilter.modules.webrisk.service.UrlValidationService
+import com.jeleniasty.phishingfilter.modules.webrisk.service.UrlExtractorService
+import com.jeleniasty.phishingfilter.shared.service.MessageService
+import com.jeleniasty.phishingfilter.shared.model.PhishingStatus
+import com.jeleniasty.phishingfilter.shared.persistence.message.Message
+import com.jeleniasty.phishingfilter.shared.utils.logger
+import org.springframework.kafka.annotation.KafkaListener
+import org.springframework.kafka.support.KafkaHeaders
+import org.springframework.messaging.handler.annotation.Header
+import org.springframework.stereotype.Service
+import java.util.*
+
+@Service
+class PhishingService(
+    private val subscriptionService: SubscriptionService,
+    private val urlValidationService: UrlValidationService,
+    private val messageService: MessageService,
+    private val phishingCacheService: PhishingCacheService
+) {
+    private val logger = logger()
+
+    @KafkaListener(
+        topics = ["\${kafka.topic.phishing-message-log.name}"],
+        groupId = "\${spring.kafka.consumer.group-id}"
+    )
+    fun check(
+        @Header(KafkaHeaders.RECEIVED_KEY) key: UUID,
+        dto: PhishingEvent
+    ) {
+        logger.info("Received message [messageId:{}]. Processing...", dto.messageId)
+
+        if (subscriptionService.processSubscription(dto.sender, dto.content)) {
+            updateMessageStatus(key, PhishingStatus.SKIPPED)
+            return
+        }
+
+        if (!subscriptionService.isSubscribed(dto.recipient)) {
+            logger.info("Recipient {} is not subscribed. Skipping processing", dto.recipient)
+            updateMessageStatus(key, PhishingStatus.SKIPPED)
+            return
+        }
+
+        if (phishingCacheService.exists(dto.sender)) {
+            logger.info("Sender {} is on the blacklist. Returning PHISHING", dto.sender)
+            updateMessageStatus(key, PhishingStatus.PHISHING)
+            return
+        }
+
+        val urls = UrlExtractorService.extractValidUrls(dto.content)
+        if (urls.isEmpty()) {
+            updateMessageStatus(key, PhishingStatus.SAFE)
+            logger.info("No url found in message. Message is SAFE")
+            return
+        }
+
+        logger.info("Found urls: {}", urls)
+
+        if (phishingCacheService.anyExists(urls)) {
+            logger.info("One of urls [{}] is on the blacklist. Returning PHISHING", urls)
+            updateMessageStatus(key, PhishingStatus.PHISHING)
+            return
+        }
+
+
+        urlValidationService.findRiskyUrl(urls).subscribe { result ->
+            when {
+                result.serviceError -> {
+                    logger.warn("Could not evaluate URLs {}, marking as PENDING", urls)
+                    updateMessageStatus(key, PhishingStatus.PENDING)
+                }
+
+                result.riskyUrl != null -> {
+                    logger.info("One of urls {} evaluated as malicious. Returning PHISHING", urls)
+                    phishingCacheService.saveKey(result.riskyUrl)
+                    phishingCacheService.saveKey(dto.sender)
+                    updateMessageStatus(key, PhishingStatus.PHISHING)
+                }
+            }
+        }
+
+        updateMessageStatus(key, PhishingStatus.SAFE)
+        logger.info("Message [messageId: {}] processed", key)
+    }
+
+
+    private fun updateMessageStatus(messageId: UUID, newPhishingStatus: PhishingStatus): Message {
+        val message = messageService.getMessage(messageId)
+            ?: throw IllegalArgumentException("Message [messageId: $messageId] not found")
+
+        message.status = newPhishingStatus
+        return messageService.saveMessage(message)
+    }
+}
