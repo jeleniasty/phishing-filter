@@ -3,7 +3,6 @@ package com.jeleniasty.phishingfilter.shared.persistence.message
 import com.jeleniasty.phishingfilter.shared.model.PhishingStatus
 import com.jeleniasty.phishingfilter.shared.persistence.Auditable
 import jakarta.persistence.*
-import java.time.Instant
 import java.util.*
 
 @Entity

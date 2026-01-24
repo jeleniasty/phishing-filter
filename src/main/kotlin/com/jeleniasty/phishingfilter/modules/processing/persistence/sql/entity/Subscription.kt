@@ -2,7 +2,6 @@ package com.jeleniasty.phishingfilter.modules.processing.persistence.sql.entity
 
 import com.jeleniasty.phishingfilter.shared.persistence.Auditable
 import jakarta.persistence.*
-import java.time.LocalDateTime
 
 @Entity
 @Table(
