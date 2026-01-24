@@ -1,5 +1,5 @@
 package com.jeleniasty.phishingfilter.shared.model;
 
-public enum OutboxStatus {
+enum class OutboxStatus {
     NEW, PROCESSED
 }

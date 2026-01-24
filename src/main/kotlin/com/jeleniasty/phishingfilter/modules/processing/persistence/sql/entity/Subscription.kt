@@ -1,5 +1,6 @@
 package com.jeleniasty.phishingfilter.modules.processing.persistence.sql.entity
 
+import com.jeleniasty.phishingfilter.shared.persistence.Auditable
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
@@ -11,24 +12,13 @@ import java.time.LocalDateTime
 class Subscription(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    var id: Long? = null,
 
     @Column(name = "subscriber", nullable = false)
-    val subscriber: String,
+    var subscriber: String,
 
     @Column(nullable = false)
-    var enabled: Boolean = true,
-
-    @Column(name = "created_at", nullable = false)
-    var createdAt: LocalDateTime = LocalDateTime.now(),
-
-    @Column(name = "updated_at", nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now()
-) {
+    var enabled: Boolean = true
+) : Auditable() {
     constructor() : this(0, "")
-
-    @PreUpdate
-    fun preUpdate() {
-        updatedAt = LocalDateTime.now()
-    }
 }
