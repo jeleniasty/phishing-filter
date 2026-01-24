@@ -5,6 +5,7 @@ import com.jeleniasty.phishingfilter.modules.webrisk.service.UrlValidationServic
 import com.jeleniasty.phishingfilter.modules.webrisk.service.UrlExtractorService
 import com.jeleniasty.phishingfilter.shared.service.MessageService
 import com.jeleniasty.phishingfilter.shared.model.PhishingStatus
+import com.jeleniasty.phishingfilter.shared.persistence.message.Message
 import com.jeleniasty.phishingfilter.shared.utils.logger
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.KafkaHeaders
@@ -85,9 +86,11 @@ class PhishingService(
     }
 
 
-    private fun updateMessageStatus(messageId: UUID, newPhishingStatus: PhishingStatus) =
-        messageService.getMessage(messageId)
-            .orElseThrow { IllegalArgumentException("Message [messageId: $messageId] not found") }
-            .apply { status = newPhishingStatus }
-            .let { messageService.saveMessage((it)) }
+    private fun updateMessageStatus(messageId: UUID, newPhishingStatus: PhishingStatus): Message {
+        val message = messageService.getMessage(messageId)
+            ?: throw IllegalArgumentException("Message [messageId: $messageId] not found")
+
+        message.status = newPhishingStatus
+        return messageService.saveMessage(message)
+    }
 }

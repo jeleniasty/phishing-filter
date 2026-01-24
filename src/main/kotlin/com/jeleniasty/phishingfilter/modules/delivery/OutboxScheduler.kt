@@ -1,4 +1,4 @@
-package com.jeleniasty.phishingfilter.modules.delivery;
+package com.jeleniasty.phishingfilter.modules.delivery
 
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
