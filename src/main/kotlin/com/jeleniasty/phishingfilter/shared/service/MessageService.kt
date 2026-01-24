@@ -45,7 +45,7 @@ class MessageService(
 
     @Transactional(readOnly = true)
     fun getUnprocessedOutboxEvents(): List<Outbox> =
-        outboxRepository.findTop100ByStatusOrderByCreatedAt(OutboxStatus.NEW)
+        outboxRepository.findTopByStatusOrderByCreatedAtSkipLocked(OutboxStatus.NEW.name, 10)
 
     @Transactional(readOnly = true)
     fun getMessages(messageIds: List<UUID>): List<Message> =

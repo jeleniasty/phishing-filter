@@ -14,17 +14,17 @@ open class Outbox(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    var id: Long = 0,
+    open var id: Long = 0,
 
     @Column(name = "aggregate_id", nullable = false)
-    var aggregateId: UUID,
+    open var aggregateId: UUID,
 
     @Column(name = "topic", nullable = false)
-    var topic: String,
+    open var topic: String,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    var status: OutboxStatus = OutboxStatus.NEW
+    open var status: OutboxStatus = OutboxStatus.NEW
 ) : Auditable() {
     protected constructor() : this(
         id = 0,

@@ -4,10 +4,10 @@ import com.jeleniasty.phishingfilter.shared.model.OutboxStatus
 import com.jeleniasty.phishingfilter.shared.service.MessageService
 import com.jeleniasty.phishingfilter.shared.utils.logger
 import org.springframework.kafka.core.KafkaTemplate
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
+import kotlin.math.log
 
 @Service
 class OutboxPublisher(
@@ -16,11 +16,14 @@ class OutboxPublisher(
 ) {
     private val logger = logger()
 
-    @Scheduled(fixedDelay = 1000)
     @Transactional
     fun publish() {
         val events = messageService.getUnprocessedOutboxEvents()
         if (events.isEmpty()) return
+
+        events.forEach { event ->
+            logger.info("Unprocessed event: ${event.id}")
+        }
 
         val messageIds = events.map { it.aggregateId }
 

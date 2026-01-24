@@ -1,10 +1,23 @@
 package com.jeleniasty.phishingfilter.shared.persistence.outbox
 
-import com.jeleniasty.phishingfilter.shared.model.OutboxStatus
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
 interface OutboxRepository : JpaRepository<Outbox, Long> {
-    fun findTop100ByStatusOrderByCreatedAt(status: OutboxStatus): List<Outbox>
+    @Query(
+        value = """
+        SELECT * FROM outbox 
+        WHERE status = :status 
+        ORDER BY created_at ASC 
+        LIMIT :limit 
+        FOR UPDATE SKIP LOCKED
+    """, nativeQuery = true
+    )
+    fun findTopByStatusOrderByCreatedAtSkipLocked(
+        @Param("status") status: String,
+        @Param("limit") limit: Int
+    ): List<Outbox>
 }

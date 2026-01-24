@@ -9,16 +9,16 @@ import java.util.*
 @Table(name = "message")
 open class Message(
     @Id
-    var id: UUID,
+    open var id: UUID,
 
-    var sender: String,
+    open var sender: String,
 
-    var recipient: String,
+    open var recipient: String,
 
-    var content: String,
+    open var content: String,
 
     @Enumerated(EnumType.STRING)
-    var status: PhishingStatus = PhishingStatus.UNKNOWN,
+    open var status: PhishingStatus = PhishingStatus.UNKNOWN,
 
     ) : Auditable() {
     protected constructor() : this(

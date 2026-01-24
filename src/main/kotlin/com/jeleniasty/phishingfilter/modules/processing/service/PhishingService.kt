@@ -1,7 +1,7 @@
 package com.jeleniasty.phishingfilter.modules.processing.service
 
+import com.jeleniasty.phishingfilter.modules.delivery.PhishingEvent
 import com.jeleniasty.phishingfilter.modules.webrisk.service.UrlValidationService
-import com.jeleniasty.phishingfilter.modules.processing.model.MessageInDto
 import com.jeleniasty.phishingfilter.modules.webrisk.service.UrlExtractorService
 import com.jeleniasty.phishingfilter.shared.service.MessageService
 import com.jeleniasty.phishingfilter.shared.model.PhishingStatus
@@ -27,11 +27,11 @@ class PhishingService(
     )
     fun check(
         @Header(KafkaHeaders.RECEIVED_KEY) key: UUID,
-        dto: MessageInDto
+        dto: PhishingEvent
     ) {
-        logger.info("Received message [messageId:{}]. Processing...", dto.recipient)
+        logger.info("Received message [messageId:{}]. Processing...", dto.messageId)
 
-        if (subscriptionService.processSubscription(dto.sender, dto.message)) {
+        if (subscriptionService.processSubscription(dto.sender, dto.content)) {
             updateMessageStatus(key, PhishingStatus.SKIPPED)
             return
         }
@@ -48,7 +48,7 @@ class PhishingService(
             return
         }
 
-        val urls = UrlExtractorService.extractValidUrls(dto.message)
+        val urls = UrlExtractorService.extractValidUrls(dto.content)
         if (urls.isEmpty()) {
             updateMessageStatus(key, PhishingStatus.SAFE)
             logger.info("No url found in message. Message is SAFE")

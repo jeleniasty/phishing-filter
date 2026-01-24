@@ -8,16 +8,16 @@ import jakarta.persistence.*
     name = "subscription",
     uniqueConstraints = [UniqueConstraint(name = "uk_subscriber", columnNames = ["subscriber"])]
 )
-class Subscription(
+open class Subscription(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,
+    open var id: Long? = null,
 
     @Column(name = "subscriber", nullable = false)
-    var subscriber: String,
+    open var subscriber: String,
 
     @Column(nullable = false)
-    var enabled: Boolean = true
+    open var enabled: Boolean = true
 ) : Auditable() {
     constructor() : this(0, "")
 }
