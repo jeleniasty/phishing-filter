@@ -18,7 +18,6 @@ class SmsIngestionService(
         val messageId = messageService.saveMessage(dto.sender, dto. recipient, dto.message)
         logger.info("Message [messageId: {}] saved", messageId)
 
-
         return MessageOutDto(messageId, PhishingStatus.PENDING)
     }
 }
