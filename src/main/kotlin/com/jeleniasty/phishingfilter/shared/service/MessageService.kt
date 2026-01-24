@@ -7,6 +7,7 @@ import com.jeleniasty.phishingfilter.shared.persistence.outbox.Outbox
 import com.jeleniasty.phishingfilter.shared.persistence.outbox.OutboxRepository
 import com.jeleniasty.phishingfilter.shared.model.PhishingStatus
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -51,8 +52,8 @@ class MessageService(
     fun getMessages(messageIds: List<UUID>): List<Message> =
         messageRepository.findAllById(messageIds)
 
-    fun getMessage(messageId: UUID): Optional<Message> =
-        messageRepository.findById(messageId)
+    fun getMessage(messageId: UUID): Message? =
+        messageRepository.findByIdOrNull(messageId)
 
     @Transactional
     fun saveOutbox(outbox: List<Outbox>): List<Outbox> = outboxRepository.saveAll(outbox)
