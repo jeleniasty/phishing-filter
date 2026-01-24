@@ -47,7 +47,6 @@ Example Response:
 
 ### Status Descriptions
 
-- **PROCESSING**: The message is succesfully ingested and it is being processed.
 - **SAFE**: The message is classified as safe.
 - **PHISHING**: The message is detected as phishing because it contains potentially malicious url evaluated with Google WebRisk API.
 - **SKIPPED**: The message was skipped from processing (e.g. recipient not subscribed).
