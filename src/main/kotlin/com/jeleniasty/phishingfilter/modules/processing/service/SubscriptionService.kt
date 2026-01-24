@@ -29,6 +29,7 @@ class SubscriptionService(private val subscriptionRepository: SubscriptionReposi
         }
     }
 
+    @Transactional
     fun subscribe(subscriber: String) {
         subscriptionRepository.findBySubscriber(subscriber)?.let {
             it.enabled = true
@@ -40,14 +41,14 @@ class SubscriptionService(private val subscriptionRepository: SubscriptionReposi
         logger.info("Subscriber [{}] successfully subscribed", subscriber)
     }
 
+    @Transactional
     fun unsubscribe(subscriber: String) {
         subscriptionRepository.findBySubscriber(subscriber)?.let {
             it.enabled = false
             subscriptionRepository.save(it)
+            logger.info("Subscriber [{}] successfully unsubscribed", subscriber)
         }
 
-
-        logger.info("Subscriber [{}] successfully unsubscribed", subscriber)
     }
 
     fun isSubscribed(subscriber: String): Boolean =
