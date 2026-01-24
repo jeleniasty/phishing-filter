@@ -72,7 +72,8 @@ docker compose up -d
 - **PostgreSQL** (`postgres`): Relational database on port 5432.
 - **Kafka** (`kafka`): Event streaming platform (KRaft mode) on ports 9092 and 9093.
 - **Cassandra** (`cassandra`): NoSQL database on port 9042.
-- **Phishing Filter App** (`phishing-filter`): Spring Boot application on port 8080.
+- **Phishing Filter App** (`phishing-filter`): horizontally scallable Spring Boot application.
+- **Nginx load balancer** (`nginx`): load balancer serving phishing-filter instances on port 8080.
 
 Data volumes are used for persistence:
 - `pgdata` for Postgres
